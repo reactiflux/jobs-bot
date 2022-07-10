@@ -124,6 +124,13 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
+      - name: Set Sentry release
+        run: |
+          curl ${{secrets.SENTRY_RELEASES}} \
+            -X POST \
+            -H 'Content-Type: application/json' \
+            -d '{"version": "${{github.sha}}"}'
+
   deployment:
     needs: build
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/actions'
