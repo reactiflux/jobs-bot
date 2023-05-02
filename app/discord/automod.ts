@@ -17,22 +17,13 @@ const spamKeywords = [
   "deepfake",
   "poki",
 ].map((x) => new RegExp(x));
-const spamPings = ["@everyone", "@here"];
+
 const safeKeywords = ["forhire", "hiring", "remote", "onsite"];
 
 const checkWords = (message: string, wordList: string[]) =>
   message.split(/\b/).some((word) => wordList.includes(word.toLowerCase()));
 
-const getPingCount = (content: string) => {
-  return spamPings.reduce(
-    (sum, pingKeyword) => (content.includes(pingKeyword) ? sum + 1 : sum),
-    0,
-  );
-};
-
 export const isSpam = (content: string, threshold = 4) => {
-  const pingCount = getPingCount(content);
-
   const numberOfSpamKeywords = spamKeywords.reduce(
     (accum, spamTrigger) => (spamTrigger.test(content) ? accum + 1 : accum),
     0,
@@ -45,8 +36,6 @@ export const isSpam = (content: string, threshold = 4) => {
   const score =
     Number(hasLink) * 2 +
     numberOfSpamKeywords +
-    // Pinging everyone is always treated as spam
-    pingCount * 5 +
     Number(hasBareInvite) * 5 -
     // If it's a job post, then it's probably not spam
     Number(hasSafeKeywords) * 10;
@@ -89,7 +78,7 @@ export default async (bot: Client) => {
           modLog.send(`Automatically kicked <@${message.author.id}> for spam`),
         ]);
       }
-    } else if (getPingCount(message.content) > 0) {
+    } else if (msg.mentions.everyone) {
       await reportUser({
         reason: ReportReasons.ping,
         message: message,
